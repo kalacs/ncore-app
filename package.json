@@ -1,9 +1,9 @@
 {
   "name": "ncore-app",
   "productName": "ncore-app",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Torrent streaming platform for nCore",
-  "main": "src/index.js",
+  "main": "main.js",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
