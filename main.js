@@ -1,8 +1,7 @@
-const { app, BrowserWindow, Notification } = require("electron");
+const { app, BrowserWindow } = require("electron");
 const path = require("path");
-const makeDlnaCast = require("./src/services/dlna.js");
-const makeTorrentClient = require("./src/services/torrent_client.js");
-const torrentClientConfig = {};
+const registerDLNAService = require("./main/services/dlna");
+const registerTorrentClient = require("./main/services/torrent_client");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -22,26 +21,6 @@ const createWindow = () => {
   mainWindow.loadURL("https://ncore.pro");
   mainWindow.webContents.openDevTools();
 };
-
-// 1. Start searching for dlna devices
-const dlnacast = makeDlnaCast();
-dlnacast
-  .startSearch()
-  .then((media) => {
-    new Notification({
-      title: "Search for dlna devices",
-      body: `A device has been found ${media.name}`,
-    }).show();
-  })
-  .catch((error) => {
-    new Notification({
-      title: "Search for dlna devices",
-      body: "No device has been found!",
-    }).show();
-  });
-
-// 2. Start torrent client
-const client = makeTorrentClient(torrentClientConfig);
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -67,3 +46,5 @@ app.on("activate", () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+const dlnaService = registerDLNAService();
+const torrentClientService = registerTorrentClient({});

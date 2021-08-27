@@ -6,7 +6,7 @@ const torrentDownDebug = require("debug")("torrent:leech");
 const torrentUpDebug = require("debug")("torrent:seed");
 const clientDebug = require("debug")("torrent:client");
 const streamDebug = require("debug")("torrent:stream");
-const ipAddressResolver = require("../utils/ip-address-resolver");
+const ipAddressResolver = require("../../utils/ip-address-resolver");
 const CONCURRENCY_LIMIT = 5;
 
 module.exports = ({
@@ -15,11 +15,14 @@ module.exports = ({
   streamServer,
 }) => {
   let server;
-  let client = new WebTorrent();
+  let client = new WebTorrent({
+    // 5 MB/s
+    downloadLimit: 5242880,
+  });
   client.on("error", function (error) {
     clientDebug(`Client error: ${error.message}`);
   });
-//  initClient({ client, downloadPath, filePath });
+  initClient({ client, downloadPath, filePath });
 
   return {
     async shutdown() {
@@ -183,7 +186,7 @@ function byExtension(list) {
     return list.includes(extension) && path.indexOf("sample") === -1;
   };
 }
-/*
+
 async function initClient({ downloadPath, filePath, client }) {
   // A. Init client
   // 1. add all torrents
@@ -209,7 +212,7 @@ async function initClient({ downloadPath, filePath, client }) {
     }
   );
 }
-*/
+
 function addTorrent({ downloadPath, client, file }) {
   let torrent;
   if ((torrent = checkTorrentIsAdded(file, client.torrents))) {

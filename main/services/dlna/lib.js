@@ -27,23 +27,17 @@ module.exports = function makeDlnaCast() {
 
   return {
     startSearch: function () {
-      return new Promise((resolve, reject)=> {
-        searchInterval = setInterval(() => {
-          debug("Search dlna player");
-          lists.update();
-  
-          if (media) {
-            clearInterval(searchInterval);
-            debug(`Player has found ${media.name}`);
-            resolve(media);
-          }
-          if (retry === MAX_RETRY) {
-            clearInterval(searchInterval);
-            reject(MAX_RETRY);
-          }
-          retry++;
-        }, 1000);  
-      });
+      searchInterval = setInterval(() => {
+        debug("Search dlna player");
+        lists.update();
+
+        if (media || retry === MAX_RETRY) {
+          clearInterval(searchInterval);
+          if (media) debug(`Player has found ${media.name}`);
+        }
+        retry++;
+      }, 1000);
+      return MAX_RETRY;
     },
     stopSearch: function () {
       clearInterval(searchInterval);
