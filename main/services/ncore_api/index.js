@@ -1,8 +1,8 @@
 const createNcoreApi = require("ncore-api");
 
-module.exports = function (config) {
+module.exports = function () {
   return {
-    start() {
+    start(config) {
       return createNcoreApi(config);
     },
     stop() {},
