@@ -2,10 +2,11 @@ const { Notification } = require("electron");
 const makeDlnaCast = require("./lib");
 
 module.exports = function () {
-  const dlnacast = makeDlnaCast();
+  let dlnacast;
 
   return {
     start() {
+      dlnacast = makeDlnaCast();
       dlnacast
         .startSearch()
         .then((media) => {

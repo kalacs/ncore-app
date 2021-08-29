@@ -1,7 +1,11 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 const registerDLNAService = require("./main/services/dlna");
-const registerTorrentClient = require("./main/services/torrent_client");
+const registerTorrentClientService = require("./main/services/torrent_client");
+const registerNCoreAPIService = require("./main/services/ncore_api");
+const registerAuthenticationService = require("./main/services/authentication");
+
+let mainWindow;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -10,7 +14,7 @@ if (require("electron-squirrel-startup")) {
 }
 
 const createWindow = () => {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -47,4 +51,12 @@ app.on("activate", () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 const dlnaService = registerDLNAService();
-const torrentClientService = registerTorrentClient({});
+const torrentClientService = registerTorrentClientService({});
+const ncoreAPIService = registerNCoreAPIService();
+const authenticationService = registerAuthenticationService();
+
+authenticationService
+  .start()
+  .then(({ username, password }) =>
+    ncoreAPIService.start({ username, password })
+  );
