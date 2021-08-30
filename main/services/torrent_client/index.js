@@ -8,5 +8,8 @@ module.exports = function (config) {
       torrentClient = makeTorrentClient(config);
     },
     stop() {},
+    getTorrentFileFolder() {
+      return torrentClient.getTorrentFileFolder();
+    },
   };
 };

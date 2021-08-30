@@ -50,11 +50,22 @@ app.on("activate", () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+const torrentClientConfig = {
+  downloadFolder: app.getPath("downloads"),
+  torrentFolder: path.join(app.getPath("downloads"), "torrent-files"),
+  streamServer: {
+    network: {
+      interface: "en0",
+    },
+  },
+};
 const dlnaService = registerDLNAService();
-const torrentClientService = registerTorrentClientService({});
-const ncoreAPIService = registerNCoreAPIService();
+const torrentClientService = registerTorrentClientService(torrentClientConfig);
+const ncoreAPIService = registerNCoreAPIService({ torrentClientService });
 const authenticationService = registerAuthenticationService();
 
+dlnaService.start();
+torrentClientService.start();
 authenticationService
   .start()
   .then(({ username, password }) =>

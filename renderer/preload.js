@@ -1,3 +1,15 @@
+const { ipcRenderer } = require("electron");
+
+const sendDownloadTorrentFile = (torrentFileId) => {
+  ipcRenderer.send("ncore-api-service/download-torrent-file", torrentFileId);
+};
+
+const extractTorrentFileId = (element) => {
+  const functionString = element.getAttribute("href");
+  const pattern = /id=(\d+)/gm;
+  return pattern.exec(functionString)[1];
+};
+
 const renderPlayButton = (parentElement) => {
   const playButtonElement = document.createElement("a");
   playButtonElement.className = "play-button";
@@ -6,7 +18,9 @@ const renderPlayButton = (parentElement) => {
   playButtonElement.onclick = function (event) {
     event.preventDefault();
     event.stopPropagation();
-    // download torrent
+
+    const torrentFileId = extractTorrentFileId(parentElement.parentElement);
+    sendDownloadTorrentFile(torrentFileId);
   };
 
   parentElement.append(playButtonElement);

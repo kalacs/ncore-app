@@ -1,12 +1,13 @@
 const WebTorrent = require("webtorrent");
 const { promisify } = require("util");
-//const globby = require("globby");
 const eachLimit = require("async/eachLimit");
-const torrentDownDebug = require("debug")("torrent:leech");
-const torrentUpDebug = require("debug")("torrent:seed");
-const clientDebug = require("debug")("torrent:client");
-const streamDebug = require("debug")("torrent:stream");
+const torrentDownDebug = require("debug")("ncore-app:leech");
+const torrentUpDebug = require("debug")("ncore-app:seed");
+const clientDebug = require("debug")("ncore-app:client");
+const streamDebug = require("debug")("ncore-app:stream");
 const ipAddressResolver = require("../../utils/ip-address-resolver");
+const fs = require("fs");
+const readdir = promisify(fs.readdir);
 const CONCURRENCY_LIMIT = 5;
 
 module.exports = ({
@@ -190,7 +191,7 @@ function byExtension(list) {
 async function initClient({ downloadPath, filePath, client }) {
   // A. Init client
   // 1. add all torrents
-  const torrents = await globby(`${filePath}/*.torrent`);
+  const torrents = await readdir(`${filePath}`);
   const totalTorrents = torrents.length;
   clientDebug(`Total number of torrents: ${totalTorrents}`);
   eachLimit(
