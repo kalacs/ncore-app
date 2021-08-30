@@ -1,6 +1,6 @@
 const dlnacasts = require("dlnacasts");
 const { promisify } = require("util");
-const debug = require("debug")("torrent:dlnacast");
+const debug = require("debug")("ncore-app:dlnacast");
 const MAX_RETRY = 10;
 
 module.exports = function makeDlnaCast() {
@@ -27,17 +27,25 @@ module.exports = function makeDlnaCast() {
 
   return {
     startSearch: function () {
-      searchInterval = setInterval(() => {
-        debug("Search dlna player");
-        lists.update();
+      return new Promise((resolve, reject) => {
+        searchInterval = setInterval(() => {
+          debug("Search dlna player");
+          lists.update();
 
-        if (media || retry === MAX_RETRY) {
-          clearInterval(searchInterval);
-          if (media) debug(`Player has found ${media.name}`);
-        }
-        retry++;
-      }, 1000);
-      return MAX_RETRY;
+          if (media || retry === MAX_RETRY) {
+            clearInterval(searchInterval);
+            if (media) {
+              debug(`Player has found ${media.name}`);
+              resolve(retry);
+            }
+          }
+          if (retry === MAX_RETRY) {
+            clearInterval(searchInterval);
+            reject(MAX_RETRY);
+          }
+          retry++;
+        }, 1000);
+      });
     },
     stopSearch: function () {
       clearInterval(searchInterval);
