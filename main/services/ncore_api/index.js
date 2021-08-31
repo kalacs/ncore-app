@@ -2,6 +2,7 @@ const { pipeline } = require("stream");
 const { ipcMain } = require("electron");
 const createNcoreApi = require("ncore-api");
 const { createWriteStream } = require("fs");
+const path = require("path");
 const debug = require("debug")("ncore-app:ncore-api");
 
 module.exports = function ({ torrentClientService }) {
@@ -23,7 +24,7 @@ module.exports = function ({ torrentClientService }) {
 
             pipeline(
               stream,
-              createWriteStream(`${torrentFolder}/${fileName}`),
+              createWriteStream(path.join(torrentFolder, fileName)),
               (err) => {
                 if (err) reject(err);
                 resolve(fileName);
@@ -31,13 +32,10 @@ module.exports = function ({ torrentClientService }) {
             );
           });
         });
-        /*
-      return client.addTorrent(fileName);
-      */
+        return torrentClientService.addTorrent(fileName);
       } catch (error) {
-        console.log(error);
-        //      client.resumeAllSeedableTorrent();
-        //      reply.code(400).send(error.message);
+        debug(error);
+        torrentClientService.resumeAllSeedableTorrent();
       }
     }
   );

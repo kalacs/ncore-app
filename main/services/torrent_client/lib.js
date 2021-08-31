@@ -2,7 +2,6 @@ const WebTorrent = require("webtorrent");
 const { promisify } = require("util");
 const eachLimit = require("async/eachLimit");
 const torrentDownDebug = require("debug")("ncore-app:leech");
-const torrentUpDebug = require("debug")("ncore-app:seed");
 const clientDebug = require("debug")("ncore-app:client");
 const streamDebug = require("debug")("ncore-app:stream");
 const ipAddressResolver = require("../../utils/ip-address-resolver");
@@ -48,14 +47,6 @@ module.exports = ({
       clientDebug("Destroying client");
 
       if (client) {
-        clientDebug("Remove torrent listeners");
-        client.torrents.forEach((torrent) => {
-          torrent.removeListener("download", onDownload(torrent));
-          torrent.removeListener("upload", onUpload(torrent));
-          torrent.removeListener("error", onTorrentError(torrent));
-          torrent.removeListener("done", onDone(torrent));
-          torrent.removeListener("warning", onWarning(torrent));
-        });
         await promisify(client.destroy.bind(client))();
       }
       clientDebug("Client has destroy");
@@ -107,7 +98,7 @@ module.exports = ({
         client,
       }).then((torrent) => torrentInfo(torrent));
     },
-    pauseAllSeedableTorrent() {
+    pauseAllSeedableTorrent: function () {
       client.torrents.forEach((torrent) => {
         const { paused, done } = torrent;
         if (!done && !paused) {
@@ -117,7 +108,7 @@ module.exports = ({
         }
       });
     },
-    resumeAllSeedableTorrent() {
+    resumeAllSeedableTorrent: function () {
       client.torrents.forEach((torrent) => {
         const { paused, done } = torrent;
         if (!done && paused) {
@@ -174,11 +165,18 @@ const fileInfo = ({ name, path, length, downloaded, progress }) => ({
   progress,
 });
 
-const clientInfo = ({ ratio, downloadSpeed, uploadSpeed, progress }) => ({
+const clientInfo = ({
   ratio,
   downloadSpeed,
   uploadSpeed,
   progress,
+  torrents,
+}) => ({
+  ratio,
+  downloadSpeed,
+  uploadSpeed,
+  progress,
+  torrents: torrents.map(torrentInfo),
 });
 
 function byExtension(list) {
@@ -226,51 +224,9 @@ function addTorrent({ downloadPath, client, file }) {
   return new Promise((resolve) => {
     client.add(file, { path: downloadPath }, function onTorrent(torrent) {
       torrentDownDebug(`Torrent ready to be used: ${torrent.name}`);
-
-      torrent.on("download", onDownload(torrent));
-      torrent.on("upload", onUpload(torrent));
-      torrent.on("error", onTorrentError(torrent));
-      torrent.on("done", onDone(torrent));
-      torrent.on("warning", onWarning(torrent));
       resolve(torrent);
     });
   });
-}
-
-function onDownload(torrent) {
-  return function () {
-    const { downloadSpeed, progress, name, downloaded } = torrent;
-    torrentDownDebug(
-      `Name: ${name}, downspeed: ${downloadSpeed / 125000} Mbps, downloaded: ${
-        downloaded / 1048576
-      } Mb`
-    );
-  };
-}
-
-function onUpload(torrent) {
-  return function () {
-    const { uploadSpeed, name, ratio } = torrent;
-    torrentUpDebug(`Name: ${name}, upspeed: ${uploadSpeed}, ratio: ${ratio}`);
-  };
-}
-
-function onTorrentError(torrent) {
-  return (error) => {
-    console.log("torrent error", error);
-  };
-}
-
-function onDone(torrent) {
-  return () => {
-    torrentUpDebug(`Torrent downloaded, start seeding: ${torrent.name}`);
-  };
-}
-
-function onWarning(torrent) {
-  return (err) => {
-    torrentDownDebug(`Warning for torrent: ${torrent.name}, ${err.message}`);
-  };
 }
 
 function checkTorrentIsAdded(file = "", torrents = []) {
