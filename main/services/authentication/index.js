@@ -4,11 +4,13 @@ const PARAM_USERNAME = "nev";
 const PARAM_PASSWORD = "pass";
 
 module.exports = function () {
+  let currentWebContents;
+
   return {
     start() {
       return new Promise((resolve) => {
         app.whenReady().then(() => {
-          const [currentWebContents] = webContents.getAllWebContents();
+          [currentWebContents] = webContents.getAllWebContents();
 
           try {
             currentWebContents.debugger.attach("1.1");
@@ -41,6 +43,8 @@ module.exports = function () {
         });
       });
     },
-    stop() {},
+    stop() {
+      return Promise.resolve(currentWebContents.debugger.detach());
+    },
   };
 };

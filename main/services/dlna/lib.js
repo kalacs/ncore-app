@@ -36,7 +36,7 @@ module.exports = function makeDlnaCast() {
             clearInterval(searchInterval);
             if (media) {
               debug(`Player has found ${media.name}`);
-              resolve(retry);
+              resolve(media);
             }
           }
           if (retry === MAX_RETRY) {

@@ -5,6 +5,34 @@ const registerTorrentClientService = require("./main/services/torrent_client");
 const registerNCoreAPIService = require("./main/services/ncore_api");
 const registerAuthenticationService = require("./main/services/authentication");
 
+// In this file you can include the rest of your app's specific main process
+// code. You can also put them in separate files and import them here.
+const torrentClientConfig = {
+  downloadFolder: path.join(
+    ...[app.getPath("downloads"), "ncore-app", "downloads"]
+  ),
+  torrentFolder: path.join(
+    ...[app.getPath("downloads"), "ncore-app", "torrent-files"]
+  ),
+  streamServer: {
+    network: {
+      interface: "en0",
+    },
+  },
+};
+const dlnaService = registerDLNAService();
+const torrentClientService = registerTorrentClientService({ dlnaService });
+const ncoreAPIService = registerNCoreAPIService({ torrentClientService });
+const authenticationService = registerAuthenticationService();
+
+dlnaService.start();
+torrentClientService.start(torrentClientConfig);
+authenticationService
+  .start()
+  .then(({ username, password }) =>
+    ncoreAPIService.start({ username, password })
+  );
+
 let mainWindow;
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -34,7 +62,14 @@ app.on("ready", createWindow);
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on("window-all-closed", () => {
+app.on("window-all-closed", async () => {
+  await Promise.all([
+    dlnaService.stop(),
+    torrentClientService.stop(),
+    ncoreAPIService.stop(),
+    authenticationService.stop(),
+  ]);
+
   if (process.platform !== "darwin") {
     app.quit();
   }
@@ -47,27 +82,3 @@ app.on("activate", () => {
     createWindow();
   }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
-const torrentClientConfig = {
-  downloadFolder: app.getPath("downloads"),
-  torrentFolder: path.join(app.getPath("downloads"), "torrent-files"),
-  streamServer: {
-    network: {
-      interface: "en0",
-    },
-  },
-};
-const dlnaService = registerDLNAService();
-const torrentClientService = registerTorrentClientService(torrentClientConfig);
-const ncoreAPIService = registerNCoreAPIService({ torrentClientService });
-const authenticationService = registerAuthenticationService();
-
-dlnaService.start();
-torrentClientService.start();
-authenticationService
-  .start()
-  .then(({ username, password }) =>
-    ncoreAPIService.start({ username, password })
-  );
