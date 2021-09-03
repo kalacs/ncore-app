@@ -1,12 +1,36 @@
-const { app, webContents } = require("electron");
+const { app, webContents, ipcMain } = require("electron");
+const debug = require("debug")("ncore-app:torrent-client-service");
+const { mkdirIfNotExists } = require("../../utils");
 const makeTorrentClient = require("./lib");
 
-module.exports = function (config) {
+module.exports = function ({ dlnaService }) {
   let torrentClient;
   let clientStatInterval;
 
+  ipcMain.on(
+    "torrent-client-service/torrent-added",
+    async function ({ infoHash }) {
+      try {
+        const serverData = await torrentClient.startStreamServer(infoHash);
+        const index = await torrentClient.getMediaFileIndex(infoHash);
+        const { host, port } = serverData;
+        debug(`${host}:${port}/${index}`);
+        ipcMain.emit(
+          "dlna-service/play-on-media",
+          `http://${host}:${port}/${index}`
+        );
+      } catch (error) {
+        debug(error);
+      }
+    }
+  );
+
   return {
-    start() {
+    start(config) {
+      Promise.all([
+        mkdirIfNotExists(config.downloadFolder),
+        mkdirIfNotExists(config.torrentFolder),
+      ]).catch(debug);
       torrentClient = makeTorrentClient(config);
 
       app.whenReady().then(() => {
@@ -21,6 +45,7 @@ module.exports = function (config) {
     },
     stop() {
       clearInterval(clientStatInterval);
+      return torrentClient.shutdown();
     },
     getTorrentFileFolder() {
       return torrentClient.getTorrentFileFolder();

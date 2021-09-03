@@ -3,7 +3,7 @@ const { ipcMain } = require("electron");
 const createNcoreApi = require("ncore-api");
 const { createWriteStream } = require("fs");
 const path = require("path");
-const debug = require("debug")("ncore-app:ncore-api");
+const debug = require("debug")("ncore-app:ncore-api-service");
 
 module.exports = function ({ torrentClientService }) {
   let service;
@@ -13,7 +13,6 @@ module.exports = function ({ torrentClientService }) {
     async (_, torrentFileId) => {
       try {
         const stream = await service.getTorrentFile(torrentFileId);
-
         const torrentFolder = await torrentClientService.getTorrentFileFolder();
         const fileName = await new Promise((resolve, reject) => {
           torrentClientService.pauseAllSeedableTorrent();
@@ -32,7 +31,10 @@ module.exports = function ({ torrentClientService }) {
             );
           });
         });
-        return torrentClientService.addTorrent(fileName);
+
+        const torrentInfo = await torrentClientService.addTorrent(fileName);
+        debug(torrentInfo);
+        ipcMain.emit("torrent-client-service/torrent-added", torrentInfo);
       } catch (error) {
         debug(error);
         torrentClientService.resumeAllSeedableTorrent();
@@ -47,6 +49,6 @@ module.exports = function ({ torrentClientService }) {
         return service;
       });
     },
-    stop() {},
+    async stop() {},
   };
 };
