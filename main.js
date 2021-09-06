@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, webContents } = require("electron");
 const path = require("path");
 const registerDLNAService = require("./main/services/dlna");
 const registerTorrentClientService = require("./main/services/torrent_client");
