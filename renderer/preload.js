@@ -22,7 +22,9 @@ const renderPlayButton = (parentElement) => {
     event.preventDefault();
     event.stopPropagation();
 
-    const torrentFileId = extractTorrentFileId(parentElement.parentElement);
+    const torrentFileId = extractTorrentFileId(
+      parentElement.querySelector("a")
+    );
     sendDownloadTorrentFile(torrentFileId);
   };
 
