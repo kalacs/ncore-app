@@ -1,7 +1,15 @@
-const { networkInterfaces } = require("os");
+const { networkInterfaces, platform } = require("os");
 
-function getAddressOfInterface(interface) {
+const getEthernetInterfaceName = (platform) =>
+  new Map([
+    ["linux", "eth0"],
+    ["darwin", "en0"],
+    ["win32", "Ethernet"],
+  ]).get(platform);
+
+function getAddressOfInterface() {
   const interfaces = networkInterfaces();
+  const interface = getEthernetInterfaceName(platform());
 
   if (!(interface in interfaces)) {
     throw new Error(`Network interface ${interface} is not exists`);
@@ -25,7 +33,7 @@ module.exports = function ipAddressResolver({
 }) {
   return {
     interface,
-    host: host || interface ? getAddressOfInterface(interface) : "127.0.0.1",
+    host: host || getAddressOfInterface(),
     port,
   };
 };
