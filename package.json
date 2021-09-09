@@ -1,7 +1,7 @@
 {
   "name": "ncore-app",
   "productName": "ncore-app",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Torrent streaming platform for nCore",
   "main": "main.js",
   "scripts": {
@@ -45,7 +45,12 @@
     }
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0"
+    "async": "^3.2.1",
+    "debug": "^4.3.2",
+    "dlnacasts": "^0.1.0",
+    "electron-squirrel-startup": "^1.0.0",
+    "ncore-api": "^0.5.0",
+    "webtorrent": "^1.5.3"
   },
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.59",
@@ -53,11 +58,6 @@
     "@electron-forge/maker-rpm": "^6.0.0-beta.59",
     "@electron-forge/maker-squirrel": "^6.0.0-beta.59",
     "@electron-forge/maker-zip": "^6.0.0-beta.59",
-    "async": "^3.2.1",
-    "debug": "^4.3.2",
-    "dlnacasts": "^0.1.0",
-    "electron": "13.2.1",
-    "ncore-api": "^0.5.0",
-    "webtorrent": "^1.5.3"
+    "electron": "13.2.1"
   }
 }
