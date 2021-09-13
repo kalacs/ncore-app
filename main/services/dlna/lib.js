@@ -107,5 +107,8 @@ module.exports = function makeDlnaCast() {
       media = null;
       return true;
     },
+    getMedia() {
+      return media;
+    },
   };
 };
