@@ -1,9 +1,17 @@
-const { app, BrowserWindow } = require("electron");
+process.env.DEBUG = "dlnacast*,ncore-app*";
+const { app, BrowserWindow, Menu, webContents } = require("electron");
 const path = require("path");
 const registerDLNAService = require("./main/services/dlna");
 const registerTorrentClientService = require("./main/services/torrent_client");
 const registerNCoreAPIService = require("./main/services/ncore_api");
 const registerAuthenticationService = require("./main/services/authentication");
+const { toggleSettingsWindow } = require("./renderer/settings");
+const { createWriteStream } = require("fs");
+
+const fileStream = createWriteStream(
+  path.join(...[app.getPath("downloads"), "ncore-app", "std.out"])
+);
+process.stdout.write = process.stderr.write = fileStream.write.bind(fileStream);
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
@@ -34,14 +42,9 @@ authenticationService
   );
 
 let mainWindow;
+let settingsWindow;
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require("electron-squirrel-startup")) {
-  // eslint-disable-line global-require
-  app.quit();
-}
-
-const createWindow = () => {
+const createWindows = () => {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -51,13 +54,37 @@ const createWindow = () => {
   });
 
   mainWindow.loadURL("https://ncore.pro");
-  //  mainWindow.webContents.openDevTools();
+  mainWindow.on("close", () => {
+    mainWindow = null;
+  });
+
+  settingsWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    frame: false,
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, "./renderer/settings/preload.js"),
+    },
+  });
+  settingsWindow.loadFile(
+    path.join(__dirname, "./renderer/settings/index.html")
+  );
+  settingsWindow.on("close", () => {
+    settingsWindow = null;
+  });
 };
+
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (require("electron-squirrel-startup")) {
+  // eslint-disable-line global-require
+  app.quit();
+}
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", createWindow);
+app.on("ready", createWindows);
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -79,6 +106,78 @@ app.on("activate", () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
+    createWindows();
   }
 });
+
+const isMac = process.platform === "darwin";
+
+const template = [
+  ...(isMac
+    ? [
+        {
+          label: app.name,
+          submenu: [
+            { role: "about" },
+            { type: "separator" },
+            { role: "services" },
+            { type: "separator" },
+            { role: "quit" },
+          ],
+        },
+      ]
+    : []),
+  {
+    label: "File",
+    submenu: [isMac ? { role: "close" } : { role: "quit" }],
+  },
+  {
+    label: "View",
+    submenu: [
+      { role: "reload" },
+      { role: "forceReload" },
+      { role: "toggleDevTools" },
+      { type: "separator" },
+      { role: "resetZoom" },
+      { role: "zoomIn" },
+      { role: "zoomOut" },
+      { type: "separator" },
+      { role: "togglefullscreen" },
+    ],
+  },
+  {
+    label: "Window",
+    submenu: [
+      { role: "minimize" },
+      { role: "zoom" },
+      ...(isMac
+        ? [
+            { type: "separator" },
+            { role: "front" },
+            { type: "separator" },
+            { role: "window" },
+          ]
+        : [{ role: "close" }]),
+    ],
+  },
+  {
+    label: "Developer",
+    submenu: [
+      {
+        label: "Settings",
+        accelerator: "CommandOrControl+Shift+S",
+        click() {
+          toggleSettingsWindow(settingsWindow);
+        },
+      },
+      {
+        label: "Debug",
+        accelerator: "Command+Shift+D",
+        click() {},
+      },
+    ],
+  },
+];
+
+const menu = Menu.buildFromTemplate(template);
+Menu.setApplicationMenu(menu);
