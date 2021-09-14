@@ -1,3 +1,4 @@
+process.env.DEBUG = "dlnacast*,ncore-app*";
 const { app, BrowserWindow, Menu, webContents } = require("electron");
 const path = require("path");
 const registerDLNAService = require("./main/services/dlna");
@@ -5,6 +6,12 @@ const registerTorrentClientService = require("./main/services/torrent_client");
 const registerNCoreAPIService = require("./main/services/ncore_api");
 const registerAuthenticationService = require("./main/services/authentication");
 const { toggleSettingsWindow } = require("./renderer/settings");
+const { createWriteStream } = require("fs");
+
+const fileStream = createWriteStream(
+  path.join(...[app.getPath("downloads"), "ncore-app", "std.out"])
+);
+process.stdout.write = process.stderr.write = fileStream.write.bind(fileStream);
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
