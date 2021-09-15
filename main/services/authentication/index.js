@@ -1,5 +1,6 @@
 const { reject } = require("async");
 const { webContents, app } = require("electron");
+const { getMainRenderer } = require("../../utils");
 const PARAM_USERNAME = "nev";
 const PARAM_PASSWORD = "pass";
 
@@ -10,8 +11,7 @@ module.exports = function () {
     start() {
       return new Promise((resolve) => {
         app.whenReady().then(() => {
-          [currentWebContents] = webContents.getAllWebContents();
-
+          currentWebContents = getMainRenderer(webContents.getAllWebContents());
           try {
             currentWebContents.debugger.attach("1.1");
           } catch (error) {
