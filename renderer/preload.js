@@ -31,7 +31,18 @@ const renderPlayButton = (parentElement) => {
   parentElement.append(playButtonElement);
 };
 
-window.addEventListener("DOMContentLoaded", () => {
+const isUsingLegacyUI = () => {
+  const legacySpecSelector = ".lista_all";
+  return !!document.querySelector(legacySpecSelector);
+};
+
+const addPlayButtonToLegacyUI = () => {
+  document
+    .querySelectorAll(".tabla_szoveg a > nobr")
+    .forEach((element) => renderPlayButton(element));
+};
+
+const addPlayButtonToNewUI = () => {
   setTimeout(() => {
     const torrentList = document.getElementsByTagName("tor-browse-list");
     if (torrentList.length) {
@@ -58,4 +69,10 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
   }, 2000);
-});
+};
+
+const addPlayButton = isUsingLegacyUI
+  ? addPlayButtonToLegacyUI
+  : addPlayButtonToNewUI;
+
+window.addEventListener("DOMContentLoaded", addPlayButton);
