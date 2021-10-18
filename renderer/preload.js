@@ -29,8 +29,6 @@ const addPlayButtonToLegacyUI = (playButtonTemplate) => {
       event.preventDefault();
       event.stopPropagation();
 
-      debugger;
-
       const torrentFileId = extractTorrentFileId(parentElement.parentElement);
       sendDownloadTorrentFile(torrentFileId);
     };
@@ -55,8 +53,6 @@ const addPlayButtonToNewUI = (playButtonTemplate) => {
     playButtonElement.onclick = function (event) {
       event.preventDefault();
       event.stopPropagation();
-
-      debugger;
 
       const torrentFileId = extractTorrentFileId(
         parentElement.querySelector("a")
