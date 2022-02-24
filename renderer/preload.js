@@ -10,28 +10,59 @@ const extractTorrentFileId = (element) => {
   return pattern.exec(functionString)[1];
 };
 
-const renderPlayButton = (parentElement) => {
-  const playButtonElement = document.createElement("span");
-  playButtonElement.className = "play-button";
-  playButtonElement.title = "Lejátszás TV-én (ÚJ)";
-  playButtonElement.innerText = `▶`;
-  playButtonElement.style.position = "absolute";
-  playButtonElement.style.left = "60px";
-  playButtonElement.style.cursor = "pointer";
-  playButtonElement.onclick = function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const torrentFileId = extractTorrentFileId(
-      parentElement.querySelector("a")
-    );
-    sendDownloadTorrentFile(torrentFileId);
-  };
-
-  parentElement.append(playButtonElement);
+const playButtonTemplate = {
+  className: "play-button",
+  title: "Lejátszás TV-én (ÚJ)",
+  innerText: `▶`,
 };
 
-window.addEventListener("DOMContentLoaded", () => {
+const isUsingLegacyUI = () => {
+  const legacyOnlySelector = ".lista_all";
+  return !!document.querySelector(legacyOnlySelector);
+};
+
+const addPlayButtonToLegacyUI = (playButtonTemplate) => {
+  const renderPlayButton = (parentElement) => {
+    const playButtonElement = document.createElement("a");
+    Object.assign(playButtonElement, playButtonTemplate);
+    playButtonElement.onclick = function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const torrentFileId = extractTorrentFileId(parentElement.parentElement);
+      sendDownloadTorrentFile(torrentFileId);
+    };
+
+    parentElement.append(playButtonElement);
+  };
+
+  document
+    .querySelectorAll(".tabla_szoveg a > nobr")
+    .forEach((element) => renderPlayButton(element));
+};
+
+const addPlayButtonToNewUI = (playButtonTemplate) => {
+  const renderPlayButton = (parentElement) => {
+    const playButtonElement = document.createElement("span");
+    Object.assign(playButtonElement, playButtonTemplate);
+
+    playButtonElement.style.position = "absolute";
+    playButtonElement.style.left = "60px";
+    playButtonElement.style.cursor = "pointer";
+
+    playButtonElement.onclick = function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const torrentFileId = extractTorrentFileId(
+        parentElement.querySelector("a")
+      );
+      sendDownloadTorrentFile(torrentFileId);
+    };
+
+    parentElement.append(playButtonElement);
+  };
+
   setTimeout(() => {
     const torrentList = document.getElementsByTagName("tor-browse-list");
     if (torrentList.length) {
@@ -58,4 +89,10 @@ window.addEventListener("DOMContentLoaded", () => {
       });
     }
   }, 2000);
+};
+
+window.addEventListener("DOMContentLoaded", () => {
+  isUsingLegacyUI()
+    ? addPlayButtonToLegacyUI(playButtonTemplate)
+    : addPlayButtonToNewUI(playButtonTemplate);
 });
